@@ -1,5 +1,5 @@
 <template>
-  <HelloWorld />
+  <ListStations />
 </template>
 
 <script lang="ts" setup>

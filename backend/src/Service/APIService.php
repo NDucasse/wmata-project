@@ -6,10 +6,10 @@ namespace App\Service;
 class APIService
 {
     protected string $baseURL;
-    protected string $apiKey;
-    function __construct(string $baseURL, string $apiKey) {
+    protected array $defaultHeaders;
+    function __construct(string $baseURL, array $defaultHeaders) {
         $this->baseURL = $baseURL;
-        $this->apiKey = $apiKey;
+        $this->defaultHeaders = $defaultHeaders;
     }
 
     // Base code from https://stackoverflow.com/a/9802854
@@ -17,12 +17,11 @@ class APIService
     // Path: string '/path/to/resource'
     // Headers: array("header_key" => "header_value")
     // Data: array("param" => "value") ==> index.php?param=value
-    public function CallAPI($method, $path, $headers = array(), $data = false): bool|string
+    public function CallAPI($method, $path, $headers = [], $data = false): bool|string
     {
         $curl = curl_init();
         $url = $this->baseURL . $path;
-        if(!$headers["api-key"])
-            $headers["api-key"] = $this->apiKey;
+        $headers = $this->defaultHeaders;
 
         switch ($method)
         {
@@ -40,8 +39,10 @@ class APIService
                     $url = sprintf("%s?%s", $url, http_build_query($data));
         }
 
-        curl_setopt($curl, CURLOPT_HEADER, $headers);
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         $result = curl_exec($curl);
 
