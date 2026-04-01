@@ -76,19 +76,18 @@ class StationService
         $fullPath = $this->nextArrivalsPath. $stationCodesString;
 
         $result = $this->apiService->CallAPI('GET', $fullPath);
-
         if (!$result) {
             return [];
         }
 
         $decodedArrivals = json_decode($result, true);
         $nextTrains = [];
-
         foreach ($decodedArrivals['Trains'] as $arrival) {
            $nextTrain = [
                'line' => $arrival['Line'],
                'destination' => $arrival['Destination'],
-               'minToArrival' => $arrival['Min']
+               'minToArrival' => $arrival['Min'],
+               'cars' => $arrival['Car'],
            ];
 
            $nextTrains[] = $nextTrain;
