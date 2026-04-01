@@ -3,24 +3,13 @@
     <div>
       <v-row>
         <v-col cols="12">
-          <v-card
-            class="py-4"
-            color="surface-variant"
-            image="https://cdn.vuetifyjs.com/docs/images/one/create/feature.png"
-            rounded="lg"
-            variant="tonal"
-          >
-            <template #title>
-              <label for="station-select">Choose a station:</label>
-              <br>
-              <select id="station-select" v-model="selectedStation" @change="fetchStationDetails">
-                <option disabled value="">Please select one</option>jh
-                <option v-for="station in stationList" :key="station" :value="station">
-                  {{ station }}
-                </option>
-              </select>
-            </template>
-          </v-card>
+          <v-select
+            v-model="selectedStation"
+            :items="stationList"
+            label="Choose a station"
+            variant="solo-filled"
+            @update:model-value="fetchStationDetails"
+          />
         </v-col>
       </v-row>
     </div>
@@ -31,8 +20,8 @@
   import axios from 'axios';
   import { ref } from 'vue';
 
-  const selectedStation = ref('');
-  const stationList = ref([]);
+  const selectedStation = ref('Select A Station');
+  const stationList = ref(['']);
 
   const fetchStationsList = async () => {
     try {
@@ -48,6 +37,8 @@
   fetchStationsList();
 
   const fetchStationDetails = async () => {
-    console.log(`Fetching data for country code: ${selectedStation.value}`)
+    console.log(`Fetching data for station: ${selectedStation.value}`)
+    const response = await axios.get(`http://localhost:8000/next-arrivals/${selectedStation.value}`)
+    console.log(response);
   }
 </script>

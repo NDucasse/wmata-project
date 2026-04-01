@@ -15,4 +15,9 @@ class StationController
     {
         return new Response($service->getStationList());
     }
+
+    #[Route('/next-arrivals/{stationName}')]
+    public function getNextArrivals(StationService $service, string $stationName): Response {
+        return new Response($service->getNextArrivalsByStationName($stationName));
+    }
 }
