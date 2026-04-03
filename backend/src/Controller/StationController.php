@@ -10,14 +10,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[AsController]
 class StationController
 {
-    #[Route('/station-list')]
-    public function getStationList(StationService $service): Response
-    {
-        return new Response($service->getStationList());
+    #[Route('/stations/station-list')]
+    public function getStationList(StationService $service): Response {
+        return new Response($service->getStationNamesList());
     }
 
-    #[Route('/next-arrivals/{stationName}')]
-    public function getNextArrivals(StationService $service, string $stationName): Response {
-        return new Response($service->getNextArrivalsByStationName($stationName));
+    #[Route('/stations/station-codes/{stationNames}')]
+    public function getStationCodes(StationService $service, string $stationNames): Response {
+        return new Response($service->getStationCodesByStationNames($stationNames));
     }
 }

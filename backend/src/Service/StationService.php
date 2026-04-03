@@ -2,41 +2,50 @@
 
 namespace App\Service;
 
-class StationService
+use Exception;
+
+class StationService extends WMATAService
 {
-    protected APIService $apiService;
-    protected string $listStationsPath;
-    protected string $nextArrivalsPath;
-    protected array $stationNamesList = [];
-    protected array $stationNameToCodes = [];
+    protected array $stationCodesByName = [];
+    protected array $stationNamesDistinctList = [];
 
+    /**
+     * @throws Exception
+     */
     function __construct() {
-        $this->listStationsPath = $_ENV['LIST_STATIONS_PATH'];
-        $this->nextArrivalsPath = $_ENV['NEXT_ARRIVALS_PATH'];
-
-        $apiKey = $_ENV['API_KEY'];
-        $baseURL = $_ENV['BASE_URL'];
-
-        $headers = ['api_key: ' . $apiKey];
-
-        $this->apiService = new APIService($baseURL, $headers);
-
-        $this->initStationsList();
+        parent::__construct();
+        $this->wmataAPIPath = $_ENV['LIST_STATIONS_PATH'];
+        try {
+            $this->initStationsList();
+        } catch (Exception $e) {
+            $constructorException = new Exception("Error during StationService construction: {$e->getMessage()}");
+            error_log($constructorException->getMessage());
+            throw $constructorException;
+        }
     }
 
     // Called only during object construction
     // Retrieves and stores list of stations from WMATA API
+    /**
+     * @throws Exception
+     */
     private function initStationsList(): void {
-        $result = $this->apiService->CallAPI('GET', $this->listStationsPath);
-        if (!$result) {
-            return;
+        try {
+            $result = $this->apiService->CallAPI('GET', $this->wmataAPIPath);
+            if (!$result) {
+                throw new Exception('Bad WMATA API Request: No Data');
+            }
+            $decodedStationsList = json_decode($result, true);
+            if ($decodedStationsList === null) {
+                throw new Exception('Bad WMATA API Request: Bad Data');
+            }
+
+            $this->formatStationData($decodedStationsList['Stations']);
+            $this->formatStationCodeData($decodedStationsList['Stations']);
+
+        } catch (Exception $exception) {
+            throw new Exception("Error retrieving Station data: {$exception->getMessage()}");
         }
-        $decodedStationsList = json_decode($result, true);
-        if ($decodedStationsList === null) {
-            return;
-        }
-        $this->formatStationData($decodedStationsList['Stations']);
-        $this->formatStationAccessData($decodedStationsList['Stations']);
     }
 
     private function formatStationData(array $stations): void {
@@ -53,59 +62,44 @@ class StationService
         }
         // Station names should be alphabetical for easy user lookup
         sort($stationList);
-        $this->stationNamesList = $stationList;
+        $this->stationNamesDistinctList = $stationList;
     }
 
-    private function formatStationAccessData(array $stations): void
+    private function formatStationCodeData(array $stations): void
     {
         foreach ($stations as $station) {
             $stationName = $station['Name'];
             $stationCode = $station['Code'];
 
             // Push to the association array to translate station name into list of assoc. station codes
-            if (!array_key_exists($stationName, $this->stationNameToCodes)) {
-                $this->stationNameToCodes[$stationName] = [$stationCode];
-            } else if (!in_array($stationCode, $this->stationNameToCodes[$stationName])) {
-                $this->stationNameToCodes[$stationName][] = $stationCode;
+            if (!array_key_exists($stationName, $this->stationCodesByName)) {
+                $this->stationCodesByName[$stationName] = [$stationCode];
+            } else if (!in_array($stationCode, $this->stationCodesByName[$stationName])) {
+                $this->stationCodesByName[$stationName][] = $stationCode;
             }
         }
     }
 
-    private function getNextArrivalsForStationCode(array $stationCodes): array {
-        $stationCodesString = implode(',', $stationCodes);
-        $fullPath = $this->nextArrivalsPath. $stationCodesString;
+    public function getStationCodesByStationNames(string $stationNames): string|bool {
+        $names = explode(',', $stationNames);
 
-        $result = $this->apiService->CallAPI('GET', $fullPath);
-        if (!$result) {
-            return [];
+        if (!$names) {
+            return false;
         }
 
-        $decodedArrivals = json_decode($result, true);
-        $nextTrains = [];
-        foreach ($decodedArrivals['Trains'] as $arrival) {
-           $nextTrain = [
-               'line' => $arrival['Line'],
-               'destination' => $arrival['Destination'],
-               'minToArrival' => $arrival['Min'],
-               'cars' => $arrival['Car'],
-           ];
-
-           $nextTrains[] = $nextTrain;
+        $stationCodes = [];
+        foreach ($names as $name) {
+            foreach ($this->stationCodesByName[$name] as $code) {
+                $stationCodes[] = $code;
+            }
         }
 
-        return $nextTrains;
+        return implode(',', $stationCodes);
     }
 
-    // Returns array of station names as json string
-    public function getStationList(): bool|string
+    // Returns array of distinct station names as json string
+    public function getStationNamesList(): string
     {
-        return json_encode($this->stationNamesList);
-    }
-
-    // Returns the next train arrivals for the station (all platforms)
-    public function getNextArrivalsByStationName(string $stationName): bool|string {
-        $codes = $this->stationNameToCodes[$stationName];
-        $nextArrivals = $this->getNextArrivalsForStationCode($codes);
-        return json_encode($nextArrivals);
+        return json_encode($this->stationNamesDistinctList);
     }
 }
