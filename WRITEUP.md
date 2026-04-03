@@ -1,3 +1,9 @@
+### How to execute locally:
+
+1. Acquire API key from WMATA: https://developer.wmata.com/
+2. Add API key to the ./backend/.env and .env.dev files as `API_KEY='{your_api_key}'` (currently empty string)
+3. With docker installed, in terminal run `./setup.sh`
+4. Navigate to 'http://localhost:3000'
 
 ### Please include a service overview including data types, service interactions, and expected usage.
 
