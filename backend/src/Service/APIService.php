@@ -2,43 +2,39 @@
 
 namespace App\Service;
 
-
 class APIService
 {
     protected string $baseURL;
     protected array $defaultHeaders;
-    function __construct(string $baseURL, array $defaultHeaders) {
+
+    /**
+     * Constructor function. Takes baseURL string and optional default headers array.
+     * Expected format: defaultHeaders ==> [ 'header_key: ' . 'header_value' ]
+     * @param string $baseURL
+     * @param array $defaultHeaders
+     */
+    function __construct(string $baseURL, array $defaultHeaders = []) {
         $this->baseURL = $baseURL;
         $this->defaultHeaders = $defaultHeaders;
     }
 
-    // Base code from https://stackoverflow.com/a/9802854
-    // Method: POST, PUT, GET etc
-    // Path: string '/path/to/resource'
-    // Headers: array("header_key" => "header_value")
-    // Data: array("param" => "value") ==> index.php?param=value
-    public function CallAPI($method, $path, $headers = [], $data = false): bool|string
+
+    /**
+     * Function for handling calls to $this->baseURL . $path
+     * All relevant calls are GET calls so no need to
+     * include other call methods.
+     * Future updates: Include other methods besides GET, include
+     * optional headers, params, body fields. Currently, params are
+     * handled by calling function. No extra headers or body fields
+     * were needed for this project.
+     * @param $path
+     * @return bool|string
+     */
+    public function CallAPI($path): bool|string
     {
         $curl = curl_init();
         $url = $this->baseURL . $path;
         $headers = $this->defaultHeaders;
-
-        switch ($method)
-        {
-            case "POST":
-                curl_setopt($curl, CURLOPT_POST, 1);
-
-                if ($data)
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-                break;
-            case "PUT":
-                curl_setopt($curl, CURLOPT_PUT, 1);
-                break;
-            default:
-                if ($data)
-                    $url = sprintf("%s?%s", $url, http_build_query($data));
-        }
-
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curl, CURLOPT_URL, $url);

@@ -32,6 +32,9 @@
 
   const menu = shallowRef(false)
 
+  /**
+   * Gets alphabetized list of stations from backend and displays them.
+   */
   const fetchStationsList = async () => {
     try {
       const response = await axios.get('http://localhost:8000/stations/station-list');

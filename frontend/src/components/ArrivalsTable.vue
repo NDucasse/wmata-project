@@ -33,11 +33,19 @@
       'width': '500px',
     },
     {
-      'title': 'Cars on Train',
+      'title': 'Number of Train Cars',
       'key': 'cars',
       'width': '500px',
     },
   ]
+
+  /**
+   * Takes the selected station name, fetches the associated
+   * station codes from the backend, then uses that data to
+   * fetch the upcoming arrivals for that station from the backend
+   * and display it.
+   * @param station
+   */
   const fetchStationArrivals = async (station: string): Promise<void> => {
     try {
       const stationCodesResponse = await axios.get(`http://localhost:8000/stations/station-codes/${station}`)

@@ -10,7 +10,9 @@ class StationService extends WMATAService
     protected array $stationNamesDistinctList = [];
 
     /**
+     * Constructor function
      * @throws Exception
+     * @returns void
      */
     function __construct() {
         parent::__construct();
@@ -24,14 +26,15 @@ class StationService extends WMATAService
         }
     }
 
-    // Called only during object construction
-    // Retrieves and stores list of stations from WMATA API
     /**
+     * Called only during object construction.
+     * Retrieves and stores list of stations from WMATA API
      * @throws Exception
+     * @return void
      */
     private function initStationsList(): void {
         try {
-            $result = $this->apiService->CallAPI('GET', $this->wmataAPIPath);
+            $result = $this->apiService->CallAPI($this->wmataAPIPath);
             if (!$result) {
                 throw new Exception('Bad WMATA API Request: No Data');
             }
@@ -48,14 +51,20 @@ class StationService extends WMATAService
         }
     }
 
+    /**
+     * Extracts list of station names from raw data.
+     * Stations with multiple platforms are listed multiple times
+     * in raw data. Resulting array removes duplicates.
+     * @param array $stations
+     * @return void
+     */
     private function formatStationData(array $stations): void {
         $stationList = [];
         foreach ($stations as $station) {
             $stationName = $station['Name'];
 
-            // Push to list of station names.
-            // No duplicates (same station different platforms listed
-            // as separate stations w same name in raw data)
+            // No duplicates (stations with multiple platforms listed
+            // multiple times in raw data)
             if (!in_array($stationName, $stationList)) {
                 $stationList[] = $stationName;
             }
@@ -65,6 +74,12 @@ class StationService extends WMATAService
         $this->stationNamesDistinctList = $stationList;
     }
 
+    /**
+     * Gets the station codes (separate code for each platform
+     * on a station) and maps them by station name.
+     * @param array $stations
+     * @return void
+     */
     private function formatStationCodeData(array $stations): void
     {
         foreach ($stations as $station) {
@@ -80,6 +95,13 @@ class StationService extends WMATAService
         }
     }
 
+    /**
+     * Returns a comma separated list string of station codes of the
+     * stations passed in as a comma separated list. Returns false if
+     * an error occurs.
+     * @param string $stationNames
+     * @return string|bool
+     */
     public function getStationCodesByStationNames(string $stationNames): string|bool {
         $names = explode(',', $stationNames);
 
@@ -97,7 +119,11 @@ class StationService extends WMATAService
         return implode(',', $stationCodes);
     }
 
-    // Returns array of distinct station names as json string
+    /**
+     * Returns the array of distinct station names
+     * created at object construction as a json string.
+     * @return string
+     */
     public function getStationNamesList(): string
     {
         return json_encode($this->stationNamesDistinctList);

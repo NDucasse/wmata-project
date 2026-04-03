@@ -1,6 +1,6 @@
 <template>
   <StationDropdown
-    @select-station="fetchArrivalsForStation"
+    @select-station="fetchStationArrivals"
   />
   <ArrivalsTable ref="arrivalsTable" />
 </template>
@@ -10,7 +10,12 @@
   import { ref } from 'vue';
 
   const arrivalsTable = ref();
-  const fetchArrivalsForStation = async (station: string): Promise<void> => {
+  /**
+   * Method for getting selected station data from StationDropdown
+   * to the ArrivalsTable.
+   * @param station
+   */
+  const fetchStationArrivals = async (station: string): Promise<void> => {
     await arrivalsTable.value.fetchStationArrivals(station);
   }
 </script>
